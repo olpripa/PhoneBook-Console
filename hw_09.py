@@ -7,8 +7,10 @@
 
     Functions:
         hello()
-        phone_add(name, phone)
-        phone_change(name, phone)
+        phone_add(name, phone) --> add User Name, Phone
+        phone_change(name, phone) --> change add User Name, NewPhone
+        hello()
+
 
     Misc variables:
 
@@ -39,9 +41,9 @@ def sanitize_phone_number(phone):
 
 def input_error(func):
     # decorator
-    def inner(arg):
+    def inner(*arg):
         try:
-            result = func(arg)
+            result = func(*arg)
             return result
         except KeyError:
             return "No user"
@@ -56,16 +58,14 @@ def input_error(func):
     return inner
 
 
-def hello(_):
+def hello():
     # outputs to the console on hello
     return f"How can I help you?"
 
 
 @input_error
-def phone_add(arg):
+def phone_add(name, phone):
     # adds a new contact to the dictionary
-    name, phone = arg
-    name = name.capitalize()
     phone = sanitize_phone_number(phone)
 
     if name in dict_users_phone.keys():
@@ -81,45 +81,31 @@ def phone_add(arg):
 
 
 @input_error
-def phone_change(arg):
+def phone_change(name, phone):
     # the new phone number of an existing contact
-    name, phone = arg
-    name = name.capitalize()
     phone = sanitize_phone_number(phone)
     dict_users_phone[name] = phone
     return f'for {name} change number to {phone}'
 
 
 @input_error
-def show(arg):
+def show_phone(name):
     # show("username") outputs the phone number for the specified contact to the console.
-    # show("all") outputs all phone number in list to the console.
-    #    flag = "".join(arg)
-    if len(arg) > 1:
-        raise MoreArgument
-    name = arg[0].capitalize()
-
-    if name == "All":
-        result = ''
-        for key, value in dict_users_phone.items():
-            result += f'(User, phone): {str(key)}, {value}\n'
-        return result
-
     if name in dict_users_phone.keys():
         return f'User {name} - have phone number {dict_users_phone.get(name)}'
     else:
-        return f'{name} is unknown argument for show ' + f'and user {name} not exist'
+        return f'and user {name} not exist'
 
 
-def parser_inputs(str):
-    # не чутливий до регістру введених команд.
-    # формуємо список в якому перше значення введена команд, наступні введені аргументи
-    list_com_arg = list(str.lower().split(" "))
-    # print(list_com_arg)
-    return list_com_arg
+def show_all():
+    # outputs all phone number in list to the console.
+    result = ''
+    for key, value in dict_users_phone.items():
+        result += f'(User, phone): {str(key)}, {value}\n'
+    return result
 
 
-def exit(_):
+def exit():
     print("Good bye!")
     return
 
@@ -127,8 +113,8 @@ def exit(_):
 dict_commands = {"hello": hello,
                  "add": phone_add,
                  "change": phone_change,
-                 "phone": show,
-                 "show": show,
+                 "phone": show_phone,
+                 "show": show_all,
                  "exit": exit,
                  "goodbye": exit,
                  "close": exit
@@ -142,13 +128,17 @@ def action(func,  dictionary,  default="NO COMMAND"):
 
 
 def main():
+    arg = ''
     print(f'main-code в {__name__} виконується тут')
 
     try:
         while True:
-            command = parser_inputs(input(">>>"))
-            do = action(command.pop(0), dict_commands)
-            result = do(command)
+            command, *arg = input('>>>').strip().split(' ', 1)
+            if arg:
+                arg = arg[0].split(',')
+
+            do = action(command, dict_commands)
+            result = do(*arg)
             if not result:
                 break
             print(result)
